@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2020 Wade Alcorn - wade@bindshell.net
+# Copyright (c) 2006-2021 Wade Alcorn - wade@bindshell.net
 # Browser Exploitation Framework (BeEF) - http://beefproject.com
 # See the file 'doc/COPYING' for copying permission
 #
@@ -12,11 +12,13 @@ end
 ## @note Include the BeEF router
 require 'core/main/router/router'
 require 'core/main/router/api'
+require 'core/main/router/error_responses'
 
 
 ## @note Include http server functions for beef
 require 'core/main/server'
 require 'core/main/handlers/modules/beefjs'
+require 'core/main/handlers/modules/legacybeefjs'
 require 'core/main/handlers/modules/command'
 require 'core/main/handlers/commands'
 require 'core/main/handlers/hookedbrowsers'

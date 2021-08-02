@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2020 Wade Alcorn - wade@bindshell.net
+# Copyright (c) 2006-2021 Wade Alcorn - wade@bindshell.net
 # Browser Exploitation Framework (BeEF) - http://beefproject.com
 # See the file 'doc/COPYING' for copying permission
 #
@@ -149,15 +149,13 @@ class Modules < BeEF::Extension::AdminUI::HttpController
      newinput = cinput.split('/')
      newcinput = newinput.shift
      if parent.detect {|p| p['text'] == newcinput }.nil?
-       fldr = {'text' => newcinput, 'cls' => 'folder', 'children' => []}
-       parent << build_recursive_tree(fldr['children'],newinput)
-     else
-       parent.each {|p|
-         if p['text'] == newcinput
-           p['children'] = build_recursive_tree(p['children'],newinput)
-         end
-       }
-     end
+       parent << {'text' => newcinput, 'cls' => 'folder', 'children' => []}
+     end  
+     parent.each {|p|
+       if p['text'] == newcinput
+         p['children'] = build_recursive_tree(p['children'],newinput)
+       end
+     }
    end
 
     if input.count > 0

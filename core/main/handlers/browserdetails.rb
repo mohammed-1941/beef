@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2020 Wade Alcorn - wade@bindshell.net
+# Copyright (c) 2006-2021 Wade Alcorn - wade@bindshell.net
 # Browser Exploitation Framework (BeEF) - http://beefproject.com
 # See the file 'doc/COPYING' for copying permission
 #
@@ -29,6 +29,7 @@ module BeEF
 
           # validate hook session value
           session_id = get_param(@data, 'beefhook')
+          print_debug "[INIT] Processing Browser Details for session #{session_id}"
           (self.err_msg "session id is invalid"; return) if not BeEF::Filters.is_valid_hook_session_id?(session_id)
           hooked_browser = HB.where(:session => session_id).first
           return if not hooked_browser.nil? # browser is already registered with framework
@@ -92,7 +93,7 @@ module BeEF
           end
 
           if BeEF::Filters.is_valid_ip?(zombie.ip)
-            BD.set(session_id, 'host.ipaddress', zombie.ip)
+            BD.set(session_id, 'network.ipaddress', zombie.ip)
           else
             self.err_msg "Invalid IP address returned from the hook browser's initial connection."
           end
@@ -199,14 +200,14 @@ module BeEF
 
           # store and log proxy details
           if using_proxy == true
-            BD.set(session_id, 'UsingProxy', "#{using_proxy}")
+            BD.set(session_id, 'network.proxy', 'Yes')
             proxy_log_string = "#{zombie.ip} is using a proxy"
             unless proxy_clients.empty?
-              BD.set(session_id, 'ProxyClient', "#{proxy_clients.sort.uniq.join(',')}")
+              BD.set(session_id, 'network.proxy.client', "#{proxy_clients.sort.uniq.join(',')}")
               proxy_log_string += " [client: #{proxy_clients.sort.uniq.join(',')}]"
             end
             unless proxy_server.nil?
-              BD.set(session_id, 'ProxyServer', "#{proxy_server}")
+              BD.set(session_id, 'network.proxy.server', "#{proxy_server}")
               proxy_log_string += " [server: #{proxy_server}]"
               if config.get("beef.extension.network.enable") == true
                 if proxy_server =~ /^([\d\.]+):([\d]+)$/
@@ -402,6 +403,17 @@ module BeEF
             BD.set(session_id, 'browser.window.size.width', window_width)
           else
             self.err_msg "Invalid value for 'browser.window.size.width' returned from the hook browser's initial connection."
+          end
+
+          # store and log IP details of host
+          print_debug("Hooked browser [id:#{zombie.id}] has IP [ip: #{zombie.ip}]")
+
+          if os_name != nil and os_version != nil
+            BeEF::Core::Models::NetworkHost.create(:hooked_browser => zombie, :ip => zombie.ip, :ntype => 'Host', :os => os_name + "-" + os_version)
+          elsif os_name != nil
+            BeEF::Core::Models::NetworkHost.create(:hooked_browser => zombie, :ip => zombie.ip, :ntype => 'Host', :os => os_name)
+          else
+            BeEF::Core::Models::NetworkHost.create(:hooked_browser => zombie, :ip => zombie.ip, :ntype => 'Host')
           end
 
           # get and store the yes|no value for browser capabilities
